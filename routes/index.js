@@ -9,6 +9,13 @@ const maria = require('../db');
 const fs = require('fs');
 const path = require('path');
 
+// firebase
+var admin = require("firebase-admin");
+var serviceAccount = require("../elderly-living-alone-firebase-adminsdk-ghk8r-d017f70c2f.json");
+admin.initializeApp({
+  credential: admin.credential.cert(serviceAccount),
+})
+
 // main
 router.get('/', function (req, res, next) {
   res.render('index', { title: 'Express' });
@@ -34,7 +41,7 @@ router.get('/start', function (req, res) {
   var sql = 'UPDATE USER SET PROCEED = 1 WHERE ID = ?'
   maria.query(sql, [req.query.id], function (err, rows, fields) {
     if (!err) {
-      console.log(rows);
+      //console.log(rows);
     } else {
       console.log("err: " + err);
       res.send(err);
@@ -56,7 +63,34 @@ router.get('/start', function (req, res) {
 
 // get done signal from py
 router.post('/done', function(req,res) {
+  console.log("start done api");
   console.log(req.query.id);
+  let target_token
+  maria.query("SELECT TOKEN FROM USER WHERE ID = ?", req.query.id, function(err, row) {
+    if(!err){
+      target_token = row[0].TOKEN
+      console.log(target_token);
+
+      let message = {
+        data: {body: "확인해주세요!"},
+        token: target_token,
+      }
+      
+      admin
+        .messaging()
+        .send(message)
+        .then(function (response) {
+          console.log('Successfully sent message: : ', response)
+        })
+        .catch(function (err) {
+          console.log('Error Sending message!!! : ', err)
+        })
+      res.send(true);
+    }else{
+      console.log(err);
+      res.send(err);
+    }
+  })
 });
 
 // send res png
@@ -80,8 +114,15 @@ router.get('/login', function (req, res) {
   var sql = "SELECT * FROM USER WHERE ID = ? AND PW = ?"
   maria.query(sql, [req.query.id, req.query.pw], function (err, rows) {
     if (!err) {
+      maria.query("UPDATE USER SET TOKEN = ? WHERE ID = ?", [req.query.token, req.query.id], function (err){
+        if(!err){
+          console.log("Update Token");
+        }else{
+        console.log(err);
+        res.send(err);
+      }
+      })
       console.log(rows.length);
-
       if (rows.length == 1) {
         res.send(true);
       } else {
@@ -103,7 +144,7 @@ router.post('/register', function (req, res) {
       console.log(rows.length);
 
       if (rows.length == 0) {
-        insert = "INSERT INTO USER VALUES(?,?,?,?,?,0)"
+        insert = "INSERT INTO USER VALUES(?,?,?,?,?,0,``)"
         var params = [req.body.id, req.body.pw, req.body.name, req.body.birth, req.body.phone];
         maria.query(insert, params, function (err, rows) {
 
