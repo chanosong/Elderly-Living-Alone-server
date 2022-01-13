@@ -144,7 +144,7 @@ router.post('/register', function (req, res) {
       console.log(rows.length);
 
       if (rows.length == 0) {
-        insert = "INSERT INTO USER VALUES(?,?,?,?,?,0,``)"
+        insert = "INSERT INTO USER VALUES(?,?,?,?,?,0,token)"
         var params = [req.body.id, req.body.pw, req.body.name, req.body.birth, req.body.phone];
         maria.query(insert, params, function (err, rows) {
 
