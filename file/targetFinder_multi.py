@@ -4,6 +4,13 @@ import time
 import multiprocessing
 import dataframe_image as dfi
 import sys
+import requests
+import os
+from dotenv import load_dotenv
+
+
+load_dotenv()
+serverUrl = os.getenv('SERVER_URL')
 
 # get argv
 id = sys.argv[1]
@@ -71,6 +78,10 @@ def main():
   
   # make png file
   dfi.export(df_res, 'file/' + id + '.png', max_cols=-1, max_rows=-1)
+
+  # let know server with POST
+  req = requests.post('http://' + serverUrl + ':3000/done?id=' +id).text
+  print(req)
 
 if __name__ == '__main__':
   main()

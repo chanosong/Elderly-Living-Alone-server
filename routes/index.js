@@ -14,15 +14,16 @@ router.get('/', function (req, res, next) {
   res.render('index', { title: 'Express' });
 });
 
-// test
+// check result is exist
 router.get('/check', function (req, res) {
 
   fs.exists(path.join("file/", req.query.id + ".png"), function (exists) {
     if (exists) {
       res.send(true);
+    }else{
+      //console.log(fileInfo);
+      res.send(false);
     }
-    //console.log(fileInfo);
-    res.send(false);
   });
 });
 
@@ -48,9 +49,14 @@ router.get('/start', function (req, res) {
       if (err) throw err;
       console.log("done");
     }
-  )
+  );
 
   res.send(true)
+});
+
+// get done signal from py
+router.post('/done', function(req,res) {
+  console.log(req.query.id);
 });
 
 // send res png
@@ -65,7 +71,7 @@ router.get('/download', function (req, res) {
     } else {
       res.end('file is not exists');
     }
-  })
+  });
 });
 
 // login
