@@ -158,6 +158,20 @@ router.post("/upload", (req, res) => {
     for (let i = 0; i < req.files.length; i++) {
       reqFiles.push(req.files[i].fileName);
     }
+    
+    let id = JSON.parse(req.body.id);
+    
+    // delete old result png
+    fs.exists('file/' + id + ".png", function (exists) {
+      if (exists) {
+        fs.access('file/' + id + ".png", fs.constants.F_OK, (err) => {
+          if(err) console.log("Can't delete");
+
+          fs.unlink('file/' + id + ".png", (err) => err?
+            console.log(err) : console.log("Delete Success"));
+        });
+      } 
+    });
 
     return res.send(true)
   });
